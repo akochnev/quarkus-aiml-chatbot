@@ -1,4 +1,4 @@
-package org.acme;
+package quarkus.hackfest.resources;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -24,25 +24,25 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 
-@Path("/hello")
+@Path("/chatbot")
 public class ChatbotResource {
 
     @GET
     @Produces(MediaType.TEXT_PLAIN)
-    public String hello() {
+    public String ping() {
         return "hello";
     }
 
-    @ConfigProperty(name = "mp.messaging.outgoing.messages.bootstrap.servers")
+    @ConfigProperty(name = "mp.messaging.outgoing.chat-messages.bootstrap.servers")
     public String bootstrapServers;
 
-    @ConfigProperty(name = "mp.messaging.outgoing.messages.topic")
+    @ConfigProperty(name = "mp.messaging.outgoing.chat-messages.topic")
     public String messagesTopic;
 
-    @ConfigProperty(name = "mp.messaging.outgoing.messages.value.serializer")
+    @ConfigProperty(name = "mp.messaging.outgoing.chat-messages.value.serializer")
     public String messagesTopicValueSerializer;
 
-    @ConfigProperty(name = "mp.messaging.outgoing.messages.key.serializer")
+    @ConfigProperty(name = "mp.messaging.outgoing.chat-messages.key.serializer")
     public String messagesTopicKeySerializer;
 
     private Producer<String, String> producer;
