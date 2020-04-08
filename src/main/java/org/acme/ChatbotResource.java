@@ -53,7 +53,7 @@ public class ChatbotResource {
     @Produces(MediaType.TEXT_PLAIN)
     @Consumes(MediaType.APPLICATION_JSON)
     public JsonNode onChatMessage(JsonNode body) {
-        System.out.println("Received body post : " + body);
+        log.info("Received body post : " + body);
 
         String senderName = body.at("/message/sender/displayName").asText();
         String messageText = body.at("/message/text").asText(); 
