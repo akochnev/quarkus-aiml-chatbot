@@ -76,6 +76,18 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-rest-client</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>com.google.apis</groupId>
+      <artifactId>google-api-services-chat</artifactId>
+      <version>v1-rev114-1.25.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.auth</groupId>
+      <artifactId>google-auth-library-oauth2-http</artifactId>
+      <version>0.18.0</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>

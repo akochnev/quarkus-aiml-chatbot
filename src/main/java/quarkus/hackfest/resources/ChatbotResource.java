@@ -5,6 +5,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.enterprise.event.Observes;
+import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.core.MediaType;
 
@@ -13,12 +14,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.Properties;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.quarkus.runtime.StartupEvent;
+import quarkus.hackfest.client.ChatClient;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -57,9 +61,13 @@ public class ChatbotResource {
 
         String senderName = body.at("/message/sender/displayName").asText();
         String messageText = body.at("/message/text").asText(); 
+        String spaceName = body.at("/message/space/name").asText();
+        String threadName = body.at("/message/thread/name").asText();
         ObjectMapper objectMapper = new ObjectMapper();
 
         ObjectNode chatMsg = objectMapper.createObjectNode();
+        chatMsg.put("spaceName", spaceName);
+        chatMsg.put("threadName", threadName);
         chatMsg.put("message", messageText);
 
         ObjectNode chatResponse = objectMapper.createObjectNode();
@@ -83,6 +91,25 @@ public class ChatbotResource {
         props.put("key.serializer", messagesTopicKeySerializer);
         producer = new KafkaProducer<String, String>(props);
     }
+
+    
+    @Inject
+    ChatClient gchatClient;
+
+    @Path("/reply")
+    @POST    
+    @Produces(MediaType.TEXT_PLAIN)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public String asyncReply(JsonNode responseContent) throws IOException, GeneralSecurityException {		
+        // @PathParam String spaceName /*, @PathParam String threadName*/, String msg
+        String spaceName = responseContent.at("/spaceName").asText();
+        String threadName = responseContent.at("/threadName").asText();
+        String msg = responseContent.at("/message").asText();
+
+		gchatClient.sendResponse(spaceName, threadName, msg);
+
+        return "Message sent";
+	}
 
 
 }

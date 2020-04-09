@@ -21,8 +21,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @ApplicationScoped
-public class SentimentMessageProcessor {
-    public static final Logger log = LoggerFactory.getLogger(SentimentMessageProcessor.class);
+public class SentimentChatMessageProcessor {
+    public static final Logger log = LoggerFactory.getLogger(SentimentChatMessageProcessor.class);
 
     private Random random = new Random();
 
@@ -31,9 +31,9 @@ public class SentimentMessageProcessor {
     SentimentService sentimentService;
 
     @Incoming("messages")               
-    @Outgoing("chat-sentiment-scores")      
+    @Outgoing("chat-sentiment-scores-results")      
     @Broadcast                       
-    public String processSentiment(String chatMessage) {
+    public String evaluateChatSentiment(String chatMessage) {
         log.info("Received chat message from message queue: {}", chatMessage);
         ObjectMapper objectMapper = new ObjectMapper();
 
@@ -44,9 +44,13 @@ public class SentimentMessageProcessor {
             JsonNode chatMsg = objectMapper.readTree(chatMessage);
         
             String msg = chatMsg.at("/message").asText();
+            String spaceName = chatMsg.at("/spaceName").asText();
+            String threadName = chatMsg.at("/threadName").asText();
 
             resp.put("date", new Date().getTime());
             resp.put("sentiment", sentimentService.getSentiment(msg));
+            resp.put("spaceName", spaceName);
+            resp.put("threadName", threadName);
 
             respStr = objectMapper.writeValueAsString(resp);
         } catch (JsonProcessingException jpe) {
