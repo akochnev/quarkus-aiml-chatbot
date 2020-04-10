@@ -1,16 +1,14 @@
 package quarkus.hackfest.sentiment; 
 
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
-import org.jboss.resteasy.annotations.jaxrs.PathParam;
-
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 @Path("/api/v0.1")
+
+//@RegisterRestClient(baseUri="http://sentiment-analysis-opendatahub1.apps.cluster-nisky-a9fb.nisky-a9fb.example.opentlc.com")
 @RegisterRestClient
 public interface SentimentRestClient {
 

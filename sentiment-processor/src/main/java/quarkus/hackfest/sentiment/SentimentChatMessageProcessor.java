@@ -5,22 +5,14 @@ import org.slf4j.LoggerFactory;
 import java.util.Date;
 import java.util.Random;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-
-import org.eclipse.microprofile.reactive.messaging.Incoming;
-import org.eclipse.microprofile.reactive.messaging.Outgoing;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
-import io.smallrye.reactive.messaging.annotations.Broadcast;
-
-import quarkus.hackfest.sentiment.SentimentRestClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-@ApplicationScoped
+// @ApplicationScoped
 public class SentimentChatMessageProcessor {
     public static final Logger log = LoggerFactory.getLogger(SentimentChatMessageProcessor.class);
 
@@ -30,9 +22,9 @@ public class SentimentChatMessageProcessor {
     @Inject
     SentimentService sentimentService;
 
-    @Incoming("messages")               
-    @Outgoing("chat-sentiment-scores-results")      
-    @Broadcast                       
+    // @Incoming("messages")               
+    // @Outgoing("chat-sentiment-scores-results")      
+    // @Broadcast                       
     public String evaluateChatSentiment(String chatMessage) {
         log.info("Received chat message from message queue: {}", chatMessage);
         ObjectMapper objectMapper = new ObjectMapper();
