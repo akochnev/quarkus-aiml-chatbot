@@ -1,4 +1,4 @@
-package quarkus.hackfest.service;
+package quarkus.hackfest.sentiment;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -11,7 +11,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import quarkus.hackfest.client.SentimentRestClient;
+import quarkus.hackfest.sentiment.SentimentRestClient;
 
 @ApplicationScoped
 public class SentimentService {

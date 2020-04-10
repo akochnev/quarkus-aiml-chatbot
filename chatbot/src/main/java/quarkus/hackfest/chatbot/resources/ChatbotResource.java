@@ -1,4 +1,4 @@
-package quarkus.hackfest.resources;
+package quarkus.hackfest.chatbot.resources;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -22,7 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.quarkus.runtime.StartupEvent;
-import quarkus.hackfest.client.ChatClient;
+import quarkus.hackfest.chatbot.client.ChatClient;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
