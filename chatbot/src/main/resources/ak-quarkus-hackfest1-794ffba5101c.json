@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "ak-quarkus-hackfest1",
+  "private_key_id": "794ffba5101ce2a7f1c7b50087b53851b467a68d",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDB1GpLtm8olom/\n4DL2ZVYcpi3BRMlxvmoDdxN3hiZ6b+wXI9KIfGtU/SNXMEqUv8S9J7JVhFlZUIuM\nUqjgHF28ek0MEz8MBP5C0+DukUFmrpvj+0TDlh+jbBvOZROfIZztBF2lLwNHGnyK\n/onoNytZBq4wn9JDmOV9XJodv+ZGbX4C5PGToCPa1plSmcauWR37p3EPX6bLVBYU\nqROqSQbpvaYfhDeojl2vtD9gRDS+Ek7fxCY1mYJ/zql+PvZmY6cEz0VERU4jkv3a\nxv1oxVQWg6IoplRTsI2hfZX21dJ0Bmf+egXxWnLn6mnHOMeZHz4tPVmoH5JBltzx\nfn3iXA4JAgMBAAECggEABiMOloUZMeTKSbv0gR6mQlP0oOjno+VOf/uWLzOdJkVC\n6Vyl/tJJp7A4HTuXMOx9cyu9lr2RAqXtNS0s0aO0SBJrPBWj6mKCFmWU+pi4xGKE\n5wv+ml63c7opizhiDajHyi1YNbGuXeL1zITQovyUL8ZpX3q/8on1wilba9O2m8Yv\nj0UnFR9yO/JnN1C8VnciqQt25XZ90ve0JgXU7il90VCqq7mJgDUipqp5fskXMnIo\nZuqsakmBkUB3TixfIq4GW1H+8hEAfE2CXkW0tF2pBQ6RlFm5heXaEN64XPQSkHNr\nSYLsaI7YlxPGiK6eft9zP+klG9oNt1/HlhKbiD8n8QKBgQDxiSRHXQfQEQwkfegO\naYNfoYre9l22n4r9iZZO3hTZl9yOh9DGrgP2PcdESFgmj2bPQFMC/CD92LuNJz7k\nMgPIP7qidinR3ikZz/hDzsxgNoqTi//nlccXS9XKLV5khJN8lNGlSqLbDbNiVA1q\n0gUKymAyMNXjLbOmLXnWRymSpQKBgQDNb+sP1sq+Ngi9aL+UltHnSi5X/2vhbtXp\nklrTHBkJkL1wX4pUgso0o8DLEa5e7P3Osi92QnybgbA4REmQSTRwL0L92NjrRQtN\nzN1oyHB0N92W8xjuVKDMuvizRqMKL1vB98IMkxHCy7wyc2WyNwJAS76OHPVZhu8Q\nC21yktiklQKBgQCAAv1VTTsMzVwwIwLQUJ+uGYHudYhpd9lEUp11I0LNqCze5aCD\nDEtRQKDR0b3Wgf4tLZxRYqthnnKYdwpgCxnyEcSqwhGcBzClW5Hq7jlnbMC5PmPc\nq4cfE7Q1OSJkB9fbGUybXBlAG9zM6ltKGBFQDL47G6LgiqJCGqwOIx0neQKBgQDA\nhoQ6Icd7HtRt/X6dWAJ6yTBJU5vcdqyN6pSnh4uHRVfjugW/UZsCXfxN0tIhL+Rk\nEuUb5Q82BQIKmSR/zbsQ75nOn6waQGhpjvZoPn/0ym4mCshwgmr3srlj+WzOHLfX\nPcNjWWipr5k9hpvlulunudRpBoaAUk40MSFu4GObSQKBgDPSViib2uXBlr1FnwGN\nmAkZ2lORpMeEJUT41R3MywjGTOs2/XMDGBW1wOwLKhd6yu7r5LvRgjB75ZDuNFdO\n/3ZK6yOPMa0607gem6IRoBSuqSCBrNSILh1Bmh3kQo12h4xWP/66bBc+0G+AVlDs\nApiwOKXqHNjWnjmeO2yai2dh\n-----END PRIVATE KEY-----\n",
+  "client_email": "quarkus-hackfest-chatbot@ak-quarkus-hackfest1.iam.gserviceaccount.com",
+  "client_id": "109596479553971081402",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/quarkus-hackfest-chatbot%40ak-quarkus-hackfest1.iam.gserviceaccount.com"
+}
