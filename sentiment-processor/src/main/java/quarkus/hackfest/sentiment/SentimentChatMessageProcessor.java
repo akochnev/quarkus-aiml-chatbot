@@ -1,4 +1,4 @@
-package quarkus.hackfest.service;
+package quarkus.hackfest.sentiment;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,9 +11,9 @@ import javax.inject.Inject;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Outgoing;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-
 import io.smallrye.reactive.messaging.annotations.Broadcast;
-import quarkus.hackfest.client.SentimentRestClient;
+
+import quarkus.hackfest.sentiment.SentimentRestClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;

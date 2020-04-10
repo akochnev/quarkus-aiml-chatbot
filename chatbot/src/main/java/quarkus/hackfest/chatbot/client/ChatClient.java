@@ -1,4 +1,4 @@
-package quarkus.hackfest.client;
+package quarkus.hackfest.chatbot.client;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -15,7 +15,6 @@ import com.google.api.services.chat.v1.model.Message;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 
-import quarkus.hackfest.resources.ChatbotResource;
 
 @ApplicationScoped
 public class ChatClient {
@@ -34,7 +33,7 @@ public class ChatClient {
         thread.setName(threadName);
         reply.setThread(thread);
 
-        GoogleCredentials credentials = GoogleCredentials.fromStream(ChatbotResource.class.getResourceAsStream(googleCredsResource))
+        GoogleCredentials credentials = GoogleCredentials.fromStream(ChatClient.class.getResourceAsStream(googleCredsResource))
         		.createScoped(CHAT_SCOPE);
         
         HttpRequestInitializer requestInitializer = new HttpCredentialsAdapter(credentials);

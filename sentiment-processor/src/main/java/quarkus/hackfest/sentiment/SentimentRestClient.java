@@ -1,4 +1,4 @@
-package quarkus.hackfest.client; 
+package quarkus.hackfest.sentiment; 
 
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;

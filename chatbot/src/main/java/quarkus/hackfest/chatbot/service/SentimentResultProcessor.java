@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.quarkus.runtime.StartupEvent;
-import quarkus.hackfest.client.ChatClient;
+import quarkus.hackfest.chatbot.client.ChatClient;
 
 @ApplicationScoped
 public class SentimentResultProcessor {
