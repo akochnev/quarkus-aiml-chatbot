@@ -11,7 +11,6 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import quarkus.hackfest.sentiment.SentimentRestClient;
 
 @ApplicationScoped
 public class SentimentService {
@@ -19,7 +18,7 @@ public class SentimentService {
 
     @Inject
     @RestClient 
-    SentimentRestClient sentimentService; 
+    SentimentRestClient sentimentRestClient; 
 
     
     public String getSentiment(String msg) {
@@ -27,7 +26,7 @@ public class SentimentService {
 
         ObjectNode msgNode = objectMapper.createObjectNode();
         msgNode.put("strData", msg);
-        JsonNode sentimentResp = sentimentService.getMessageSentiment(msgNode);
+        JsonNode sentimentResp = sentimentRestClient.getMessageSentiment(msgNode);
 
         logger.info("Returned response: {} ", sentimentResp);
 

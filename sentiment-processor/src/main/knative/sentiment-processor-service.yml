@@ -1,0 +1,11 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: sentiment-processor
+spec:
+  template:
+    metadata:
+      name: sentiment-processor-v1
+    spec:
+      containers:
+        - image: image-registry.openshift-image-registry.svc:5000/chatbot-dev1/sentiment-processorj:latest
