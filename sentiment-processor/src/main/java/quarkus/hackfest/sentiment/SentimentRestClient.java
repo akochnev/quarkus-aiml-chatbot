@@ -7,9 +7,7 @@ import javax.ws.rs.Path;
 import com.fasterxml.jackson.databind.JsonNode;
 
 @Path("/api/v0.1")
-
-//@RegisterRestClient(baseUri="http://sentiment-analysis-opendatahub1.apps.cluster-nisky-a9fb.nisky-a9fb.example.opentlc.com")
-@RegisterRestClient
+@RegisterRestClient(configKey="sentiment-rest-client")
 public interface SentimentRestClient {
 
     /**
