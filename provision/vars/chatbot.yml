@@ -1,0 +1,14 @@
+---
+
+kubeconfig: '/home/akochnev/.kube/config'
+
+oc_cli : '/usr/local/bin/oc'
+
+oc_users_file: '/home/akochnev/projects/openshift-clusters/ocp-users.htpasswd'
+
+hackfest_src_dir: '/home/akochnev/projects/quarkus-hackfest-apr2020/quarkus-hackfest1'
+
+# hacky flag to control running some tasks
+# only once on the first run
+first_run: false
+

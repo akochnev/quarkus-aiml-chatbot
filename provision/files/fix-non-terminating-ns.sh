@@ -1,0 +1,2 @@
+# first, start oc proxy to proxy access to the API server
+curl -k -H "Content-Type: application/json" -X PUT --data-binary @files/non-terminating-ns-fix.json http://127.0.0.1:8001/api/v1/namespaces/knative-serving/finalize

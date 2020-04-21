@@ -1,0 +1,72 @@
+
+- apiVersion: operators.coreos.com/v1
+  kind: OperatorGroup
+  metadata:
+    name: amqs-operatorgroup
+    namespace: {{ project_name }}
+  spec:
+    targetNamespaces:
+    - {{ project_name }}
+
+- apiVersion: operators.coreos.com/v1
+  kind: CatalogSourceConfig
+  metadata:
+    name: amqs-csc
+    namespace: {{ project_name }}
+  spec:
+    targetNamespace: openshift-operators 
+    packages: amq-streams
+    source: redhat-operators
+
+- apiVersion: operators.coreos.com/v1alpha1
+  kind: Subscription
+  metadata:
+    name: amqstreams-operator
+    namespace: {{ project_name }}
+  spec:
+    channel: stable
+    installPlanApproval: Automatic
+    name: amq-streams
+    source: redhat-operators
+    sourceNamespace: openshift-marketplace
+
+- apiVersion: kafka.strimzi.io/v1beta1
+  kind: Kafka
+  metadata:
+    name: dev-cluster
+    namespace: {{ project_name }}
+  spec:
+    kafka:
+      version: 2.4.0
+      replicas: 3
+      listeners:
+        plain: {}
+        tls: {}
+      config:
+        offsets.topic.replication.factor: 3
+        transaction.state.log.replication.factor: 3
+        transaction.state.log.min.isr: 2
+        log.message.format.version: '2.4'
+      storage:
+        type: ephemeral
+    zookeeper:
+      replicas: 3
+      storage:
+        type: ephemeral
+    entityOperator:
+      topicOperator: {}
+      userOperator: {}
+
+- apiVersion: kafka.strimzi.io/v1beta1
+  kind: KafkaTopic
+  metadata:
+    name: messages
+    labels:
+      strimzi.io/cluster: dev-cluster
+    namespace: {{ project_name }}
+  spec:
+    partitions: 10
+    replicas: 3
+    config:
+      retention.ms: 604800000
+      segment.bytes: 1073741824

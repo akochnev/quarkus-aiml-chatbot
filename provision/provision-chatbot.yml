@@ -1,0 +1,174 @@
+---
+- hosts: localhost
+  vars_files:
+    - ./vars/chatbot.yml
+  name : test out k8s setup
+  vars:
+    dev_project: akuser3-dev
+    odh_project: akuser3-odh
+    amq_project: amq-streams1
+
+  tasks:
+    # - name: create openshift admin / user secrets
+    #   shell:  
+    #     cmd: "{{ oc_cli }} create secret generic ak-htpasswd-secret -n openshift-config --from-file=htpasswd={{ oc_users_file }}"
+    - name: create openshift admin/users secret
+      k8s:
+        kubeconfig: '{{ kubeconfig }}'
+        state: present
+        src: ./files/ak-htpasswd-secret.yml
+
+    # This needs to run only the first time - ugh !     
+    - name: add ak-htpasswd-secret to oauth config 
+      shell: |
+        oc patch oauth cluster --type=json -p='[
+        { "op":"add",
+        "path":"/spec/identityProviders/-",
+        "value": {
+          "name":"ak-htpasswd",
+          "mappingMethod":"claim",
+          "type":"HTPasswd",
+          "htpasswd": {
+            "fileData": {
+              "name": "ak-htpasswd-secret" 
+            } 
+          }
+        } 
+        }]'
+      when: first_run  
+   
+
+    - name: make akadmin a cluster admin
+      k8s: 
+        kubeconfig: '{{ kubeconfig }}'
+        state: present
+        src: ./files/akadmin-admin-rb.yml
+
+    - name: Generate projects per-user
+      k8s:
+        kubeconfig: '{{ kubeconfig }}'
+        definition: '{{ lookup("template", "./files/project.yml.j2")|from_yaml }}'
+      with_items: 
+        - { name: 'akuser3-dev', user: 'akuser3'}
+        - { name: 'akuser3-odh', user: 'akuser3'}
+        - { name: 'amq-streams1', user: 'akuser3'}
+        - { name: 'knative-serving', user: 'akuser3'}
+        - { name: 'knative-eventing', user: 'akuser3'}
+
+    - name: add seldon CRD
+      k8s:
+        kubeconfig: '{{ kubeconfig }}'    
+        definition: '{{ lookup("template", "./files/seldon-deployment-crd.yml")|from_yaml }}'
+      
+    - name: deploy open data hub
+      k8s:
+        kubeconfig: '{{ kubeconfig }}'
+        definition: '{{ lookup("template", "./files/opendatahub-subscription.yml.j2")|from_yaml }}'
+      vars:
+        project_name: '{{ dev_project }}'
+      
+    - name: deploy kafka
+      k8s: 
+        kubeconfig: '{{ kubeconfig}}'
+        definition: '{{ lookup("template", "./files/amqstreams-subscription.yml.j2")|from_yaml }}'
+      vars:
+        project_name: 'amq-streams1'
+
+    - name: create https route for chatbot
+      k8s:
+        kubeconfig: '{{ kubeconfig }}'
+        definition:
+          apiVersion: route.openshift.io/v1
+          kind: Route
+          metadata:
+            labels:
+              app.kubernetes.io/name: hackfest-chatbot
+              app.kubernetes.io/version: 1.0.0-SNAPSHOT
+              app.openshift.io/runtime: quarkus
+            name: chatbot-https
+            namespace: '{{ dev_project }}'
+          spec:
+            host: hackfest-chatbot-akuser3-dev.apps.cluster-nisky-8a9d.nisky-8a9d.example.opentlc.com
+            port:
+              targetPort: http
+            tls:
+              insecureEdgeTerminationPolicy: Redirect
+              termination: edge
+            to:
+              kind: Service
+              name: hackfest-chatbot
+              weight: 100
+            wildcardPolicy: None
+
+
+    - name: deploy serverless - serving
+      k8s: 
+        kubeconfig: '{{ kubeconfig}}'
+        definition: '{{ lookup("template", "./files/serverless-subs.yml.j2")|from_yaml }}' 
+
+    - name: deploy serverless - eventing
+      k8s: 
+        kubeconfig: '{{ kubeconfig}}'
+        definition: '{{ lookup("template", "./files/eventing-subs.yml.j2")|from_yaml }}'     
+
+    - name: deploy kafka - eventing
+      k8s: 
+        kubeconfig: '{{ kubeconfig}}'
+        definition: '{{ lookup("template", "./files/knative-kafka-subs.yml.j2")|from_yaml }}'  
+
+
+    - name: build and deploy chatbot service
+      shell: 
+        chdir: '{{ hackfest_src_dir }}/chatbot'
+        cmd: | 
+          {{oc_cli}} login -u akuser3 && oc project {{ dev_project }}
+
+          ./mvnw -f {{hackfest_src_dir}}/chatbot/pom.xml clean package -DskipTests=true -Dquarkus.kubernetes.deploy=true
+
+          {{oc_cli}} login -u opentlc-mgr && oc project {{ dev_project }}
+      when: build_chatbot | bool
+
+
+    # pushing to quay and deploying from there is a workaround to failing to build
+    - name: build and deploy processor 
+      block:
+      - name: build and tag processor image
+        shell:
+          chdir: '{{ hackfest_src_dir }}/sentiment-processor'
+          cmd: |
+            ./mvnw clean package -DskipTests=true -Pnative 
+            
+            podman build -f src/main/docker/Dockerfile.native -t sentiment-processor:{{quay_tag}} .
+
+            podman tag sentiment-processor:{{quay_tag}}  quay.io/akochnev_redhat/sentiment-processor:{{quay_tag}} 
+            
+            podman push quay.io/akochnev_redhat/sentiment-processor:{{quay_tag}}                    
+
+      - name: deploy processor knative service 
+        k8s: 
+          kubeconfig: '{{ kubeconfig }}'    
+          definition:
+            apiVersion: serving.knative.dev/v1
+            kind: Service
+            metadata:
+              name: sentiment-processor
+              namespace: '{{ dev_project }}'
+            spec:
+              template:
+                metadata:
+                  name: sentiment-processor-{{quay_tag}}
+                spec:
+                  containers:
+                    - image: quay.io/akochnev_redhat/sentiment-processor:{{quay_tag}}
+
+      - name: Add kafka source
+        k8s: 
+          kubeconfig: '{{ kubeconfig }}'
+          definition: '{{ lookup("template", "./files/kafka-source.yml.j2")|from_yaml }}'  
+        vars:
+          project_name: '{{ dev_project }}'     
+      when: build_processor | bool
+      vars:
+        quay_tag: test4    
+
+

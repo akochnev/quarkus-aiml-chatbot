@@ -1,0 +1,13 @@
+apiVersion: sources.knative.dev/v1alpha1
+kind: KafkaSource
+metadata:
+  name: messages-kafka-source
+  namespace: '{{ project_name }}'
+spec:
+  consumerGroup: sentiment-processor-group
+  bootstrapServers: dev-cluster-kafka-bootstrap.amq-streams1.svc.cluster.local:9092
+  topics: messages
+  sink:
+    apiVersion: serving.knative.dev/v1alpha1
+    kind: Service
+    name: sentiment-processor
