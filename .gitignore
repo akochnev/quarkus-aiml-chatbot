@@ -36,3 +36,5 @@ pom.xml.versionsBackup
 release.properties
 .mvn/wrapper/maven-wrapper.jar
 src/main/resources/ak-quarkus-hackfest1-794ffba5101c.json
+chatbot/src/main/resources/ak-quarkus-hackfest1-77c547f279f3.json
+provision/files/ak-htpasswd-secret.yml
