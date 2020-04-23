@@ -7,6 +7,7 @@
     dev_project: akuser3-dev
     odh_project: akuser3-odh
     amq_project: amq-streams1
+    dev_user: akuser3
 
   tasks:
     # - name: create openshift admin / user secrets
@@ -35,7 +36,7 @@
           }
         } 
         }]'
-      when: first_run  
+      when: first_run | bool
    
 
     - name: make akadmin a cluster admin
@@ -49,30 +50,54 @@
         kubeconfig: '{{ kubeconfig }}'
         definition: '{{ lookup("template", "./files/project.yml.j2")|from_yaml }}'
       with_items: 
-        - { name: 'akuser3-dev', user: 'akuser3'}
-        - { name: 'akuser3-odh', user: 'akuser3'}
-        - { name: 'amq-streams1', user: 'akuser3'}
-        - { name: 'knative-serving', user: 'akuser3'}
-        - { name: 'knative-eventing', user: 'akuser3'}
+        - { name: '{{ dev_project }}', user: '{{dev_user}}'}
+        - { name: '{{ odh_project }}', user: '{{dev_user}}'}
+        - { name: '{{ amq_project }}', user: '{{dev_user}}'}
+        - { name: 'knative-serving', user: '{{dev_user}}'}
+        - { name: 'knative-eventing', user: '{{dev_user}}'}
 
     - name: add seldon CRD
       k8s:
         kubeconfig: '{{ kubeconfig }}'    
         definition: '{{ lookup("template", "./files/seldon-deployment-crd.yml")|from_yaml }}'
       
-    - name: deploy open data hub
+    - name: install open data hub operator
       k8s:
         kubeconfig: '{{ kubeconfig }}'
-        definition: '{{ lookup("template", "./files/opendatahub-subscription.yml.j2")|from_yaml }}'
+        definition: '{{ lookup("template", "./files/opendatahub-operator.yml.j2")|from_yaml }}'
       vars:
-        project_name: '{{ dev_project }}'
+        project_name: '{{ odh_project }}'
+
+    # there probably is a better way to do this    
+    - name: wait for open data hub operator to finish setting up
+      pause:
+        seconds: 20  
+
+    - name: deploy open data hub instance
+      k8s:
+        kubeconfig: '{{ kubeconfig }}'
+        definition: '{{ lookup("template", "./files/opendatahub-instance.yml.j2")|from_yaml }}'
+      vars:
+        project_name: '{{ odh_project }}'    
+    
       
-    - name: deploy kafka
+    - name: subscribe to amq streams operator
       k8s: 
         kubeconfig: '{{ kubeconfig}}'
         definition: '{{ lookup("template", "./files/amqstreams-subscription.yml.j2")|from_yaml }}'
       vars:
-        project_name: 'amq-streams1'
+        project_name: '{{ amq_project }}'
+
+    - name: wait for amq streams operator to finish setting up
+      pause:
+        seconds: 30    
+
+    - name: Create kafka instance
+      k8s: 
+        kubeconfig: '{{ kubeconfig}}'
+        definition: '{{ lookup("template", "./files/amqstreams-instance.yml.j2")|from_yaml }}'
+      vars:
+        project_name: '{{ amq_project }}'
 
     - name: create https route for chatbot
       k8s:
@@ -101,21 +126,75 @@
             wildcardPolicy: None
 
 
-    - name: deploy serverless - serving
+    - name: create serverless operator subscriptions
+      block:
+      - name: subscribe to serverless - serving operators
+        k8s: 
+          kubeconfig: '{{ kubeconfig }}'
+          definition: 
+            apiVersion: operators.coreos.com/v1alpha1
+            kind: Subscription
+            metadata:
+              name: serverless-operator
+              namespace: openshift-operators
+            spec:
+              channel: preview-4.3
+              installPlanApproval: Automatic
+              name: serverless-operator
+              source: redhat-operators
+              sourceNamespace: openshift-marketplace
+        
+      - name: wait for serverless operator subscriptions
+        pause:
+          seconds: 45       
+
+      - name: subscribe to serverless - eventing operator
+        k8s: 
+          kubeconfig: '{{ kubeconfig}}'
+          definition: 
+            apiVersion: operators.coreos.com/v1alpha1
+            kind: Subscription
+            metadata:
+              name: knative-eventing-operator
+              namespace: openshift-operators
+            spec:
+              channel: alpha
+              installPlanApproval: Automatic
+              name: knative-eventing-operator
+              source: community-operators
+              sourceNamespace: openshift-marketplace
+              targetNamespace: knative-eventing
+      - name: wait for eventing operator subscriptions
+        pause:
+          seconds: 45 
+
+      - name: subscribe to  kafka-knative operator
+        k8s: 
+          kubeconfig: '{{ kubeconfig}}'
+          definition: 
+            apiVersion: operators.coreos.com/v1alpha1
+            kind: Subscription
+            metadata:
+              name: knative-kafka-operator
+              namespace: openshift-operators
+            spec:
+              channel: alpha
+              installPlanApproval: Automatic
+              name: knative-kafka-operator
+              source: community-operators
+              sourceNamespace: openshift-marketplace  
+
+      - name: wait for knative kafka operator subscriptions
+        pause:
+          seconds: 20 
+
+
+    - name: create serving and eventing instances
       k8s: 
         kubeconfig: '{{ kubeconfig}}'
-        definition: '{{ lookup("template", "./files/serverless-subs.yml.j2")|from_yaml }}' 
-
-    - name: deploy serverless - eventing
-      k8s: 
-        kubeconfig: '{{ kubeconfig}}'
-        definition: '{{ lookup("template", "./files/eventing-subs.yml.j2")|from_yaml }}'     
-
-    - name: deploy kafka - eventing
-      k8s: 
-        kubeconfig: '{{ kubeconfig}}'
-        definition: '{{ lookup("template", "./files/knative-kafka-subs.yml.j2")|from_yaml }}'  
-
+        definition: '{{ lookup("template", "./files/serverless-instances.yml.j2")|from_yaml }}'  
+      vars:
+        project_name: '{{ amq_project }}'
 
     - name: build and deploy chatbot service
       shell: 
@@ -123,7 +202,7 @@
         cmd: | 
           {{oc_cli}} login -u akuser3 && oc project {{ dev_project }}
 
-          ./mvnw -f {{hackfest_src_dir}}/chatbot/pom.xml clean package -DskipTests=true -Dquarkus.kubernetes.deploy=true
+          ./mvnw -f {{hackfest_src_dir}}/chatbot/mvnw clean package -DskipTests=true -Dquarkus.kubernetes.deploy=true
 
           {{oc_cli}} login -u opentlc-mgr && oc project {{ dev_project }}
       when: build_chatbot | bool
@@ -169,6 +248,6 @@
           project_name: '{{ dev_project }}'     
       when: build_processor | bool
       vars:
-        quay_tag: test4    
+        quay_tag: test8
 
 

@@ -1,0 +1,22 @@
+- apiVersion: operator.knative.dev/v1alpha1
+  kind: KnativeServing
+  metadata:
+    name: knative-serving
+    namespace: knative-serving
+
+- apiVersion: eventing.knative.dev/v1alpha1
+  kind: KnativeEventing
+  metadata:
+    name: knative-eventing
+    namespace: knative-eventing
+  spec: {}
+
+- apiVersion: eventing.knative.dev/v1alpha1
+  kind: KnativeEventingKafka
+  metadata:
+    name: knative-eventing-kafka
+    namespace: '{{ project_name }}'
+  spec:
+    bootstrapServers: 'dev-cluster-kafka-bootstrap.amq-streams1.svc.cluster.local:9092'
+    setAsDefaultChannelProvisioner: true
+

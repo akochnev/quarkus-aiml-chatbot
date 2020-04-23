@@ -1,0 +1,21 @@
+- apiVersion: operators.coreos.com/v1
+  kind: OperatorGroup
+  metadata:
+    name: odh-opg
+    namespace: {{ project_name }} 
+  spec:
+    targetNamespaces:
+    - {{ project_name }} 
+
+
+- apiVersion: operators.coreos.com/v1alpha1
+  kind: Subscription
+  metadata:
+    name: opendatahub-operator
+    namespace: {{ project_name }}
+  spec:
+    channel: alpha
+    installPlanApproval: Automatic
+    name: opendatahub-operator
+    source: community-operators
+    sourceNamespace: openshift-marketplace
