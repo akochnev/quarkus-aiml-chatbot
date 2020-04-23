@@ -1,0 +1,41 @@
+= Introduction
+
+There are a few options to run this automation/provisioning script. All of this is still pretty raw and requires some manual variable setting on execution
+
+= Prequisites
+
+1. Log into your openshift instance as an administrator account (e.g. opentlc-mgr)
+
+2. Log into quay.io with access to the repo where the image will be pushed into
+
+= Running it
+
+== Options / variables to set
+
+* `first_run` - this is a bit of  hack to only add the htpasswd authentication provider only once. Re-running the playbook is a problem when it tries to patch the identity provider with the same htpasswd setup. Set this to `true` the first time you run the playbook, and skip this variable if you're re-running the playbook after the initial setup (e.g. if running this fails because of timeouts)
+
+* `build_processor` - this option allows skipping the long build and deploy of the processor (e.g. includes a maven build which pushes out the result into the cluster). Set to `true` if you need to deploy a new version
+
+* `build_chatbot` - this option allow skipping the build and deploy of the chatbot
+
+== Example 
+
+[source,bash]
+----
+> ansible-playbook provision-chatbot.yml  -e build_processor=true -e build_chatbot=true -e first_run=true
+----
+
+== Post-provision Steps:
+
+1. Open the  settings in https://console.cloud.google.com/apis/api/chat.googleapis.com/hangouts-chat, go to Configuration and update the url of the HTTPS route. 
+
+Be sure to leave the /chatbot at the end of the URL after updating with the new https URL
+
+
+= Issues
+
+* Non-idempotent addition of authentication provider
+* Timing pauses when subscribing to operators
+* Building the code on the local machine instead of in the cluster with s2i
+* Logging in as the dev user in order to push the processor to the right project
+* Dependency on the amq streams project name in the processor code

@@ -38,3 +38,4 @@ release.properties
 src/main/resources/ak-quarkus-hackfest1-794ffba5101c.json
 chatbot/src/main/resources/ak-quarkus-hackfest1-77c547f279f3.json
 provision/files/ak-htpasswd-secret.yml
+provision/secrets/ocp-users.htpasswd

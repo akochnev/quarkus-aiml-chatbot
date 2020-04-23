@@ -3,11 +3,11 @@
   vars_files:
     - ./vars/chatbot.yml
   name : test out k8s setup
-  vars:
-    dev_project: akuser3-dev
-    odh_project: akuser3-odh
+  vars:    
+    # Note - this value is included in the chatbot and processor configuration, 
+    # so it's not easily changeable - used to locate the kafka bootstrap
     amq_project: amq-streams1
-    dev_user: akuser3
+        
 
   tasks:
     # - name: create openshift admin / user secrets
@@ -22,7 +22,7 @@
     # This needs to run only the first time - ugh !     
     - name: add ak-htpasswd-secret to oauth config 
       shell: |
-        oc patch oauth cluster --type=json -p='[
+        {{oc_cli}} patch oauth cluster --type=json -p='[
         { "op":"add",
         "path":"/spec/identityProviders/-",
         "value": {
@@ -112,8 +112,7 @@
               app.openshift.io/runtime: quarkus
             name: chatbot-https
             namespace: '{{ dev_project }}'
-          spec:
-            host: hackfest-chatbot-akuser3-dev.apps.cluster-nisky-8a9d.nisky-8a9d.example.opentlc.com
+          spec:            
             port:
               targetPort: http
             tls:
@@ -200,11 +199,9 @@
       shell: 
         chdir: '{{ hackfest_src_dir }}/chatbot'
         cmd: | 
-          {{oc_cli}} login -u akuser3 && oc project {{ dev_project }}
+          {{oc_cli}} project {{ dev_project }}
 
-          ./mvnw -f {{hackfest_src_dir}}/chatbot/mvnw clean package -DskipTests=true -Dquarkus.kubernetes.deploy=true
-
-          {{oc_cli}} login -u opentlc-mgr && oc project {{ dev_project }}
+          ./mvnw clean package -DskipTests=true -Dquarkus.kubernetes.deploy=true
       when: build_chatbot | bool
 
 
@@ -217,11 +214,11 @@
           cmd: |
             ./mvnw clean package -DskipTests=true -Pnative 
             
-            podman build -f src/main/docker/Dockerfile.native -t sentiment-processor:{{quay_tag}} .
+            {{podman_cli}} build -f src/main/docker/Dockerfile.native -t sentiment-processor:{{quay_tag}} .
 
-            podman tag sentiment-processor:{{quay_tag}}  quay.io/akochnev_redhat/sentiment-processor:{{quay_tag}} 
+            {{podman_cli}} tag sentiment-processor:{{quay_tag}}  {{quay_registry_ns}}/sentiment-processor:{{quay_tag}} 
             
-            podman push quay.io/akochnev_redhat/sentiment-processor:{{quay_tag}}                    
+            {{podman_cli}} push {{quay_registry_ns}}/sentiment-processor:{{quay_tag}}                    
 
       - name: deploy processor knative service 
         k8s: 
@@ -238,7 +235,7 @@
                   name: sentiment-processor-{{quay_tag}}
                 spec:
                   containers:
-                    - image: quay.io/akochnev_redhat/sentiment-processor:{{quay_tag}}
+                    - image: "{{quay_registry_ns}}/sentiment-processor:{{quay_tag}}"
 
       - name: Add kafka source
         k8s: 
@@ -248,6 +245,6 @@
           project_name: '{{ dev_project }}'     
       when: build_processor | bool
       vars:
-        quay_tag: test8
+        quay_tag: '{{processor_version}}'
 
 

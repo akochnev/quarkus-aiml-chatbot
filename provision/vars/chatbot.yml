@@ -1,14 +1,62 @@
 ---
-
+# -----------------------------------
+# Local Tools configuration
+# -----------------------------------
 kubeconfig: '/home/akochnev/.kube/config'
 
+# The path to the oc client
 oc_cli : '/usr/local/bin/oc'
 
+# The path to the oc client
+podman_cli : '/usr/bin/podman'
+
+# An htpasswd file that would be configured with additional users
+# for example -- the `dev_user` below should be in that list
 oc_users_file: '/home/akochnev/projects/openshift-clusters/ocp-users.htpasswd'
 
+# The root directory for the Sentiment Bot projects
 hackfest_src_dir: '/home/akochnev/projects/quarkus-hackfest-apr2020/quarkus-hackfest1'
 
-# hacky flag to control running some tasks
-# only once on the first run
+
+
+# --------------------------------------
+# User and project configuration 
+# --------------------------------------
+# This user is set as an admin to the OpenDataHub and the 
+# AMQ streams, and the project that holds the chatbot and processor
+dev_user: akuser3
+
+# The name of the 'dev' project - where the chatbot and processor are deployed
+dev_project: akuser3-dev
+
+# The name of the opendatahub project
+odh_project: akuser3-odh
+
+# quay registry and namespace for the sentiment processor
+quay_registry_ns: quay.io/akochnev_redhat
+
+# This is the version of the processor that will get pushed to quay
+processor_version: test10
+
+
+# -------------------------------------
+# Run configuration
+# --------------------------
+# Set this to 'true' on the first run . If set to 'true' on subsequent runs the playbook fails because 
+# it can't add the same htpasswd auth provider
 first_run: false
+
+# Whether to build and deploy the chat bot component
+# The build and deploy does take a while, so you def need it on the initial run
+# but can be skipped later on
+build_chatbot: true
+
+# Whether to build and deploy the build processor
+# This ends up doing native compilation, so it takes a while to complete
+# it also pushes 
+build_processor: true
+
+
+
+
 
