@@ -36,7 +36,7 @@ odh_project: akuser3-odh
 quay_registry_ns: quay.io/akochnev_redhat
 
 # This is the version of the processor that will get pushed to quay
-processor_version: test10
+processor_version: test13
 
 
 # -------------------------------------

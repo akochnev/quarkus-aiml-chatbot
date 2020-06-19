@@ -2,7 +2,7 @@
     "apiVersion": "v1",
     "kind": "Namespace",
     "metadata": {
-        "name": "akuser3-dev"
+        "name": "knative-serving"
     },
     "spec": {
         "finalizers": [  ]

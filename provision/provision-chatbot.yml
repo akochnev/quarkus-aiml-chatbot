@@ -56,29 +56,29 @@
         - { name: 'knative-serving', user: '{{dev_user}}'}
         - { name: 'knative-eventing', user: '{{dev_user}}'}
 
-    - name: add seldon CRD
-      k8s:
-        kubeconfig: '{{ kubeconfig }}'    
-        definition: '{{ lookup("template", "./files/seldon-deployment-crd.yml")|from_yaml }}'
+    # - name: add seldon CRD
+    #   k8s:
+    #     kubeconfig: '{{ kubeconfig }}'    
+    #     definition: '{{ lookup("template", "./files/seldon-deployment-crd.yml")|from_yaml }}'
       
-    - name: install open data hub operator
-      k8s:
-        kubeconfig: '{{ kubeconfig }}'
-        definition: '{{ lookup("template", "./files/opendatahub-operator.yml.j2")|from_yaml }}'
-      vars:
-        project_name: '{{ odh_project }}'
+    # - name: install open data hub operator
+    #   k8s:
+    #     kubeconfig: '{{ kubeconfig }}'
+    #     definition: '{{ lookup("template", "./files/opendatahub-operator.yml.j2")|from_yaml }}'
+    #   vars:
+    #     project_name: '{{ odh_project }}'
 
     # there probably is a better way to do this    
-    - name: wait for open data hub operator to finish setting up
-      pause:
-        seconds: 20  
+    # - name: wait for open data hub operator to finish setting up
+    #   pause:
+    #     seconds: 20  
 
-    - name: deploy open data hub instance
-      k8s:
-        kubeconfig: '{{ kubeconfig }}'
-        definition: '{{ lookup("template", "./files/opendatahub-instance.yml.j2")|from_yaml }}'
-      vars:
-        project_name: '{{ odh_project }}'    
+    # - name: deploy open data hub instance
+    #   k8s:
+    #     kubeconfig: '{{ kubeconfig }}'
+    #     definition: '{{ lookup("template", "./files/opendatahub-instance.yml.j2")|from_yaml }}'
+    #   vars:
+    #     project_name: '{{ odh_project }}'    
     
       
     - name: subscribe to amq streams operator
@@ -137,7 +137,7 @@
               name: serverless-operator
               namespace: openshift-operators
             spec:
-              channel: preview-4.3
+              channel: "4.4"
               installPlanApproval: Automatic
               name: serverless-operator
               source: redhat-operators
@@ -145,27 +145,27 @@
         
       - name: wait for serverless operator subscriptions
         pause:
-          seconds: 45       
+          seconds: 60       
 
-      - name: subscribe to serverless - eventing operator
-        k8s: 
-          kubeconfig: '{{ kubeconfig}}'
-          definition: 
-            apiVersion: operators.coreos.com/v1alpha1
-            kind: Subscription
-            metadata:
-              name: knative-eventing-operator
-              namespace: openshift-operators
-            spec:
-              channel: alpha
-              installPlanApproval: Automatic
-              name: knative-eventing-operator
-              source: community-operators
-              sourceNamespace: openshift-marketplace
-              targetNamespace: knative-eventing
-      - name: wait for eventing operator subscriptions
-        pause:
-          seconds: 45 
+      # - name: subscribe to serverless - eventing operator
+      #   k8s: 
+      #     kubeconfig: '{{ kubeconfig}}'
+      #     definition: 
+      #       apiVersion: operators.coreos.com/v1alpha1
+      #       kind: Subscription
+      #       metadata:
+      #         name: knative-eventing-operator
+      #         namespace: openshift-operators
+      #       spec:
+      #         channel: alpha
+      #         installPlanApproval: Automatic
+      #         name: knative-eventing-operator
+      #         source: community-operators
+      #         sourceNamespace: openshift-marketplace
+      #         targetNamespace: knative-eventing
+      # - name: wait for eventing operator subscriptions
+      #   pause:
+      #     seconds: 45 
 
       - name: subscribe to  kafka-knative operator
         k8s: 
@@ -193,7 +193,7 @@
         kubeconfig: '{{ kubeconfig}}'
         definition: '{{ lookup("template", "./files/serverless-instances.yml.j2")|from_yaml }}'  
       vars:
-        project_name: '{{ amq_project }}'
+        project_name: '{{ dev_project }}'
 
     - name: build and deploy chatbot service
       shell: 
@@ -207,6 +207,8 @@
 
     # pushing to quay and deploying from there is a workaround to failing to build
     - name: build and deploy processor 
+      vars:
+        quay_tag: "{{ processor_version }}"
       block:
       - name: build and tag processor image
         shell:
@@ -218,7 +220,7 @@
 
             {{podman_cli}} tag sentiment-processor:{{quay_tag}}  {{quay_registry_ns}}/sentiment-processor:{{quay_tag}} 
             
-            {{podman_cli}} push {{quay_registry_ns}}/sentiment-processor:{{quay_tag}}                    
+            {{podman_cli}} push {{quay_registry_ns}}/sentiment-processor:{{quay_tag}}                   
 
       - name: deploy processor knative service 
         k8s: 
@@ -236,15 +238,19 @@
                 spec:
                   containers:
                     - image: "{{quay_registry_ns}}/sentiment-processor:{{quay_tag}}"
-
-      - name: Add kafka source
-        k8s: 
-          kubeconfig: '{{ kubeconfig }}'
-          definition: '{{ lookup("template", "./files/kafka-source.yml.j2")|from_yaml }}'  
-        vars:
-          project_name: '{{ dev_project }}'     
       when: build_processor | bool
+
+    - name: Apply KafkaSource CRD
+      k8s: 
+        kubeconfig: '{{ kubeconfig }}'
+        src: 'files/kafka-source-crd.yml'
+
+    - name: Add kafka source instance to dev project
+      k8s: 
+        kubeconfig: '{{ kubeconfig }}'
+        definition: '{{ lookup("template", "./files/kafka-source.yml.j2")|from_yaml }}'  
       vars:
-        quay_tag: '{{processor_version}}'
+        project_name: '{{ dev_project }}'  
+      
 
 

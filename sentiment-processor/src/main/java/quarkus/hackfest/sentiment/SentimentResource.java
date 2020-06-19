@@ -57,13 +57,19 @@ public class SentimentResource {
     SentimentService sentimentService;
 
     @POST
-    @Consumes(MediaType.APPLICATION_JSON)
+    // @Consumes(MediaType.APPLICATION_JSON)
+    // @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.TEXT_PLAIN)
-    public String checkSentiment(JsonNode chatMsg) {
-        logger.info("Checking sentiment for message {}", chatMsg);
-        ObjectMapper objectMapper = new ObjectMapper();
+    public String checkSentiment(String chatMsgStr) {
+        
+        logger.info("Received incoming message: {} ", chatMsgStr);
+
         String respStr = "";
         try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode chatMsg = objectMapper.readTree(chatMsgStr);
+
+            logger.info("Checking sentiment for message {}", chatMsg);
 
             ObjectNode resp = objectMapper.createObjectNode();
 

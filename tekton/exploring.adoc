@@ -1,0 +1,56 @@
+
+Find the s2i task and try things out inside
+https://github.com/openshift/source-to-image
+
+Review the si2 task definition https://github.com/tektoncd/catalog/blob/v1beta1/s2i/s2i.yaml
+
+
+Try out the commands that are run: 
+podman run -it -v $(pwd):/workspace/source:Z --entrypoint=/bin/sh quay.io/openshift-pipeline/s2i:nightly 
+
+Find the builder image for quarkus - quay.io/quarkus/ubi-quarkus-native-s2i:19.3.1-java8
+
+Run the s2i command to generate the Dockerfile 
+cd /workspace/source
+
+s2i build chatbot/ quay.io/quarkus/ubi-quarkus-native-s2i:19.3.1-java8 --as-dockerfile Dockerfile.gen
+
+Enter the podman container
+cd /workspace/source
+podman run --cgroups disabled --privileged -it -v $(pwd)/../containers:/var/lib/containers:Z -v $(pwd):/workspace/source:Z --entrypoint=/bin/sh quay.io/buildah/stable
+
+A couple of notes on this:
+* need the --privileged and/or --cgroups disabled because otherwise podman complains about not being able to talk to systemd
+* Require mounting the workspace source (where your source code you're building) and /var/lib/containers (otherwise buildah fails because it doesn't have privileges to do stuff - https://github.com/containers/buildah/blob/master/troubleshooting.md)
+
+Run buildah to create the image
+buildah bud --layers --tls-verify=false -f Dockerfile.gen -t local-image-example1 .
+A couple of notes:
+* fails because the target doesn't have /var/lib/s2i/asemble
+
+Hm... different direction .. 
+
+Create the task (based on the readme)
+oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/master/s2i/s2i.yaml
+
+create the pipeline service account (for creds)
+oc create serviceaccount pipeline
+oc adm policy add-scc-to-user privileged -z pipeline
+oc adm policy add-role-to-user edit -z pipeline
+
+create the secret 
+- make a robot account in quay
+- create the secret on the command line
+oc create secret generic quay-reg-secret --from-literal=username=akochnev_redhat+foorobot --from-literal=password=whatever your pwd is
+- attach the secret t0 the pipeline service account
+oc patch sa/pipeline --type=json -p='[
+      {"op":"add",
+       "path":"/secrets/-",
+       "value":{"name":"quay-reg-secret"}}]'
+
+
+
+
+
+
+

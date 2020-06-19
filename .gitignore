@@ -41,3 +41,4 @@ provision/secrets/ocp-users.htpasswd
 provision/upload/
 chatbot/src/main/resources/ak-quarkus-hackfest1-apikey.json
 upload/
+sentiment-processor/ak-quarkus-hackfest1-e4e0e3749203.json

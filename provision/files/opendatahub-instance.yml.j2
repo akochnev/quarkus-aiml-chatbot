@@ -1,141 +1,149 @@
-- apiVersion: opendatahub.io/v1alpha1
-  kind: OpenDataHub
-  metadata:
-    name: hackfest-odh
+- apiVersion: kfdef.apps.kubeflow.org/v1
+  kind: KfDef
+  metadata:    
+    name: opendatahub
     namespace: {{ project_name }}
   spec:
-    aicoe-jupyterhub:
-      odh_deploy: true
-      notebook_cpu: 1
-      notebook_memory: 2Gi
-      registry: quay.io
-      repository: odh-jupyterhub
-      notebook_images:
-        deploy_all_notebooks: false
-        deploy_cuda_notebooks: false
-      storage_class: null
-      db_memory: 1Gi
-      jupyterhub_memory: 1Gi
-      notebook_image: 's2i-minimal-notebook:3.6'
-      s3_endpoint_url: ''
-      gpu_mode: ''
-      user_pvc_size: 2Gi
-      spark_configmap_template: jupyterhub-spark-operator-configmap
-      spark_pyspark_submit_args: >-
-        --conf spark.cores.max=6 --conf spark.executor.instances=2 --conf
-        spark.executor.memory=3G --conf spark.executor.cores=3 --conf
-        spark.driver.memory=4G --packages
-        com.amazonaws:aws-java-sdk:1.7.4,org.apache.hadoop:hadoop-aws:2.7.3
-        pyspark-shell
-      spark_pyspark_driver_python: jupyter
-      spark_pyspark_driver_python_opts: notebook
-      spark_home: /opt/app-root/lib/python3.6/site-packages/pyspark/
-      spark_pythonpath: >-
-        $PYTHONPATH:/opt/app-root/lib/python3.6/site-packages/:/opt/app-root/lib/python3.6/site-packages/pyspark/python/:/opt/app-root/lib/python3.6/site-packages/pyspark/python/lib/py4j-0.8.2.1-src.zip
-      spark:
-        image: 'quay.io/opendatahub/spark-cluster-image:spark22python36'
-        worker:
-          instances: 2
-          resources:
-            limits:
-              memory: 4Gi
-              cpu: 3
-            requests:
-              memory: 1Gi
-              cpu: 500m
-        master:
-          instances: 1
-          resources:
-            limits:
-              memory: 1Gi
-              cpu: 1
-            requests:
-              memory: 512Mi
-              cpu: 500m
-    spark-operator:
-      odh_deploy: true
-      worker:
-        instances: 0
-        resources:
-          limits:
-            memory: 2Gi
-            cpu: 1
-          requests:
-            memory: 1Gi
-            cpu: 500m
-      master:
-        instances: 0
-        resources:
-          limits:
-            memory: 1Gi
-            cpu: 1
-          requests:
-            memory: 512Mi
-            cpu: 500m
-    seldon:
-      odh_deploy: true
-    kafka:
-      odh_deploy: false
-      kafka_cluster_name: odh-message-bus
-      kafka_broker_replicas: 3
-      kafka_zookeeper_replicas: 3
-    monitoring:
-      odh_deploy: false
-      enable_pushgateway: false
-    beakerx:
-      odh_deploy: false
-    ai-library:
-      odh_deploy: true
-    argo:
-      odh_deploy: true
-    superset:
-      odh_deploy: false
-      image: 'quay.io/aiops/superset:v0.30'
-      superset_admin:
-        admin_usr: userKPJ
-        admin_psw: 7ujmko0
-        admin_fname: admin
-        admin_lname: admin
-        admin_email: admin@fab.org
-      secret_key: thisISaSECRET_1234
-      data_volume_size: 512Mi
-      sqlalchemy_db_uri: 'sqlite:////var/lib/superset/superset.db'
-    data-catalog:
-      odh_deploy: false
-      aws_access_key_id: changeme
-      aws_secret_access_key: changeme
-      s3_endpoint: s3.foo.com
-      s3_port: 8080
-      s3_is_secure: false
-      spark-cluster:
-        master_node_count: 1
-        master_memory: 1Gi
-        master_cpu: 1
-        worker_node_count: 2
-        worker_memory: 2Gi
-        worker_cpu: 2
-        spark_cluster_name: spark-cluster-data-catalog
-        spark_image: 'quay.io/opendatahub/spark-cluster-image:spark24'
-      hive-metastore:
-        database:
-          image: registry.access.redhat.com/rhscl/postgresql-96-rhel7
-          username: changeme
-          password: changeme
-          memory_limit: 1Gi
-          volume_capacity: 10Gi
-          driver: org.postgresql.Driver
-        warehouse_volume_capacity: 10Gi
-      thrift-server:
-        spark_cluster_port: 7077
-        spark_max_cores: 6
-      hue:
-        database:
-          username: changeme
-          password: changeme
-          root_password: changeme
-          volume_capacity: 10Gi
-          image: registry.access.redhat.com/rhscl/mysql-57-rhel7
-          memory_limit: 1Gi
-        hue_secret_key: changeme
+    applications:
+      - kustomizeConfig:
+          repoRef:
+            name: manifests
+            path: odh-common
+        name: odh-common
+      - kustomizeConfig:
+          repoRef:
+            name: manifests
+            path: odhseldon/cluster
+        name: odhseldon
+      - kustomizeConfig:
+          repoRef:
+            name: manifests
+            path: ai-library/cluster
+        name: ai-library-cluster
+      - kustomizeConfig:
+          repoRef:
+            name: manifests
+            path: ai-library/operator
+        name: ai-library-operator
+      - kustomizeConfig:
+          repoRef:
+            name: manifests
+            path: odhargo/cluster
+        name: odhargo-cluster
+      - kustomizeConfig:
+          repoRef:
+            name: manifests
+            path: odhargo/odhargo
+        name: odhargo
+    repos:
+      - name: kf-manifests
+        uri: >-
+          https://github.com/opendatahub-io/manifests/tarball/v0.7-branch-openshift
+      - name: manifests
+        uri: 'https://github.com/opendatahub-io/odh-manifests/tarball/v0.6.1'
+    version: v0.6.1
+
+apiVersion: ailibrary.opendatahub.io/v1alpha1
+kind: AILibrary
+metadata:
+  name: sentiment-ai-lib
+  namespace: {{ project_name }}
+spec:
+  models:
+    - containername: anom-c
+      cpu: 10m
+      enabled: false
+      image: quay.io/opendatahub/ai-library-anomaly-detection
+      memory: 200Mi
+      modelname: anomaly-detection
+    - containername: assoc-c
+      cpu: 10m
+      enabled: false
+      image: quay.io/opendatahub/ai-library-association-rule-learning
+      memory: 200Mi
+      modelname: association-rule-learning
+    - containername: corr-c
+      cpu: 10m
+      enabled: false
+      image: quay.io/opendatahub/ai-library-correlation-analysis
+      memory: 200Mi
+      modelname: correlation-analysis
+    - containername: dupbp-c
+      cpu: 10m
+      enabled: false
+      image: quay.io/opendatahub/ai-library-duplicate-bug-predict
+      memory: 200Mi
+      modelname: duplicate-bug-predict
+    - containername: flakp-c
+      cpu: 10m
+      enabled: true
+      image: quay.io/opendatahub/ai-library-flakes-predict
+      memory: 200Mi
+      modelname: flakes-predict
+    - containername: fraud-c
+      cpu: 10m
+      enabled: false
+      image: quay.io/opendatahub/ai-library-fraud-detection
+      memory: 200Mi
+      modelname: fraud-detection
+    - containername: matrixf-c
+      cpu: 10m
+      enabled: false
+      image: quay.io/opendatahub/ai-library-matrix-factorization
+      memory: 200Mi
+      modelname: matrix-factorization
+    - containername: regrp-c
+      cpu: 10m
+      enabled: true
+      image: quay.io/opendatahub/ai-library-regression-predict
+      memory: 200Mi
+      modelname: regression-predict
+    - memory: 200Mi
+      enabled: true
+      cpu: 10m
+      model: model-en
+      containername: sent-p
+      proxyimage: quay.io/opendatahub/ai-library-sentiment-analysis-proxy
+      modelname: sentiment-analysis
+      template: sentiment-analysis-deploy.yaml.j2
+      image: quay.io/opendatahub/ai-library-sentiment-analysis
+    - containername: anom-c
+      cpu: 10m
+      enabled: false
+      image: quay.io/opendatahub/ai-library-topic-model
+      memory: 200Mi
+      modelname: topic-model
+  sample-data:
+    - enabled: false
+      image: quay.io/opendatahub/ai-library-sample-data
+      s3_destination_prefix: cr_sample_data/
+  user-interface:
+    - enabled: false
+      endpoints:
+        flakes: 'http://flakes-predict-predictor:8000/'
+        regression: 'http://regression-predict-predictor:8000/'
+      image: 'quay.io/opendatahub/ai-library-ui:latest'
 
 
+# This fixes an issue with the AI-Library exposing the wrong service in the route
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: sentiment-analysis-fixed
+  namespace: {{ project_name }}
+  labels:
+    seldon-app: sentiment-analysis-sentiment-analysis-serving
+    seldon-deployment-id: sentiment-analysis
+spec:
+  host: >-
+    sentiment-analysis3-akuser3-odh.apps.cluster-nisky-66fe.nisky-66fe.example.opentlc.com
+  to:
+    kind: Service
+    name: sentiment-analysis-sentiment-analysis-serving
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Allow
+  wildcardPolicy: None

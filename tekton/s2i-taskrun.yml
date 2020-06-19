@@ -1,0 +1,29 @@
+apiVersion: tekton.dev/v1alpha1
+kind: TaskRun
+metadata:
+  name: s2i-taskrun
+  generateName: s2i-taskrun-
+spec:
+  # Use service account with git and image repo credentials
+  serviceAccountName: pipeline
+  taskRef:
+    name: s2i
+  inputs:
+    params:
+    - name: BUILDER_IMAGE
+      value: quay.io/quarkus/ubi-quarkus-native-s2i:20.0.0-java8
+    resources:
+      - name: source
+        resourceSpec:
+          type: git
+          params:
+          - name: url
+            value: https://github.com/akochnev/quarkus-hackfest-apr2020
+  outputs:
+    resources:
+    - name: image
+      resourceSpec:
+        type: image
+        params:
+        - name: url
+          value: quay.io/akochnev_redhat/hackfest-chatbot:test1
