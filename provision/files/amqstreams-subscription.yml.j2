@@ -7,15 +7,6 @@
     targetNamespaces:
     - {{ project_name }} 
 
-- apiVersion: operators.coreos.com/v1
-  kind: CatalogSourceConfig
-  metadata:
-    name: amqs-csc
-    namespace: openshift-marketplace
-  spec:
-    source: redhat-operators
-    targetNamespace: openshift-operators
-    packages: amq-streams
 
 - apiVersion: operators.coreos.com/v1alpha1
   kind: Subscription

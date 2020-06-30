@@ -11,12 +11,3 @@
     namespace: knative-eventing
   spec: {}
 
-- apiVersion: eventing.knative.dev/v1alpha1
-  kind: KnativeEventingKafka
-  metadata:
-    name: knative-eventing-kafka
-    namespace: 'knative-eventing'
-  spec:
-    bootstrapServers: 'dev-cluster-kafka-bootstrap.amq-streams1.svc.cluster.local:9092'
-    setAsDefaultChannelProvisioner: true
-

@@ -1,6 +1,8 @@
 - apiVersion: kfdef.apps.kubeflow.org/v1
   kind: KfDef
   metadata:    
+    annotations:
+      kfctl.kubeflow.io/force-delete: 'false'
     name: opendatahub
     namespace: {{ project_name }}
   spec:
@@ -38,112 +40,7 @@
     repos:
       - name: kf-manifests
         uri: >-
-          https://github.com/opendatahub-io/manifests/tarball/v0.7-branch-openshift
+          https://github.com/opendatahub-io/manifests/tarball/master
       - name: manifests
-        uri: 'https://github.com/opendatahub-io/odh-manifests/tarball/v0.6.1'
+        uri: 'https://github.com/opendatahub-io/odh-manifests/tarball/master'
     version: v0.6.1
-
-apiVersion: ailibrary.opendatahub.io/v1alpha1
-kind: AILibrary
-metadata:
-  name: sentiment-ai-lib
-  namespace: {{ project_name }}
-spec:
-  models:
-    - containername: anom-c
-      cpu: 10m
-      enabled: false
-      image: quay.io/opendatahub/ai-library-anomaly-detection
-      memory: 200Mi
-      modelname: anomaly-detection
-    - containername: assoc-c
-      cpu: 10m
-      enabled: false
-      image: quay.io/opendatahub/ai-library-association-rule-learning
-      memory: 200Mi
-      modelname: association-rule-learning
-    - containername: corr-c
-      cpu: 10m
-      enabled: false
-      image: quay.io/opendatahub/ai-library-correlation-analysis
-      memory: 200Mi
-      modelname: correlation-analysis
-    - containername: dupbp-c
-      cpu: 10m
-      enabled: false
-      image: quay.io/opendatahub/ai-library-duplicate-bug-predict
-      memory: 200Mi
-      modelname: duplicate-bug-predict
-    - containername: flakp-c
-      cpu: 10m
-      enabled: true
-      image: quay.io/opendatahub/ai-library-flakes-predict
-      memory: 200Mi
-      modelname: flakes-predict
-    - containername: fraud-c
-      cpu: 10m
-      enabled: false
-      image: quay.io/opendatahub/ai-library-fraud-detection
-      memory: 200Mi
-      modelname: fraud-detection
-    - containername: matrixf-c
-      cpu: 10m
-      enabled: false
-      image: quay.io/opendatahub/ai-library-matrix-factorization
-      memory: 200Mi
-      modelname: matrix-factorization
-    - containername: regrp-c
-      cpu: 10m
-      enabled: true
-      image: quay.io/opendatahub/ai-library-regression-predict
-      memory: 200Mi
-      modelname: regression-predict
-    - memory: 200Mi
-      enabled: true
-      cpu: 10m
-      model: model-en
-      containername: sent-p
-      proxyimage: quay.io/opendatahub/ai-library-sentiment-analysis-proxy
-      modelname: sentiment-analysis
-      template: sentiment-analysis-deploy.yaml.j2
-      image: quay.io/opendatahub/ai-library-sentiment-analysis
-    - containername: anom-c
-      cpu: 10m
-      enabled: false
-      image: quay.io/opendatahub/ai-library-topic-model
-      memory: 200Mi
-      modelname: topic-model
-  sample-data:
-    - enabled: false
-      image: quay.io/opendatahub/ai-library-sample-data
-      s3_destination_prefix: cr_sample_data/
-  user-interface:
-    - enabled: false
-      endpoints:
-        flakes: 'http://flakes-predict-predictor:8000/'
-        regression: 'http://regression-predict-predictor:8000/'
-      image: 'quay.io/opendatahub/ai-library-ui:latest'
-
-
-# This fixes an issue with the AI-Library exposing the wrong service in the route
-kind: Route
-apiVersion: route.openshift.io/v1
-metadata:
-  name: sentiment-analysis-fixed
-  namespace: {{ project_name }}
-  labels:
-    seldon-app: sentiment-analysis-sentiment-analysis-serving
-    seldon-deployment-id: sentiment-analysis
-spec:
-  host: >-
-    sentiment-analysis3-akuser3-odh.apps.cluster-nisky-66fe.nisky-66fe.example.opentlc.com
-  to:
-    kind: Service
-    name: sentiment-analysis-sentiment-analysis-serving
-    weight: 100
-  port:
-    targetPort: http
-  tls:
-    termination: edge
-    insecureEdgeTerminationPolicy: Allow
-  wildcardPolicy: None

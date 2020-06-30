@@ -55,30 +55,36 @@
         - { name: '{{ amq_project }}', user: '{{dev_user}}'}
         - { name: 'knative-serving', user: '{{dev_user}}'}
         - { name: 'knative-eventing', user: '{{dev_user}}'}
-
-    # - name: add seldon CRD
-    #   k8s:
-    #     kubeconfig: '{{ kubeconfig }}'    
-    #     definition: '{{ lookup("template", "./files/seldon-deployment-crd.yml")|from_yaml }}'
       
-    # - name: install open data hub operator
-    #   k8s:
-    #     kubeconfig: '{{ kubeconfig }}'
-    #     definition: '{{ lookup("template", "./files/opendatahub-operator.yml.j2")|from_yaml }}'
-    #   vars:
-    #     project_name: '{{ odh_project }}'
+    - name: install open data hub operator
+      k8s:
+        kubeconfig: '{{ kubeconfig }}'
+        definition: '{{ lookup("template", "./files/opendatahub-operator.yml.j2")|from_yaml }}'
+      vars:
+        project_name: '{{ odh_project }}'
+ 
+    - name: wait for open data hub operator to finish setting up
+      pause:
+        seconds: 30  
 
-    # there probably is a better way to do this    
-    # - name: wait for open data hub operator to finish setting up
-    #   pause:
-    #     seconds: 20  
 
-    # - name: deploy open data hub instance
-    #   k8s:
-    #     kubeconfig: '{{ kubeconfig }}'
-    #     definition: '{{ lookup("template", "./files/opendatahub-instance.yml.j2")|from_yaml }}'
-    #   vars:
-    #     project_name: '{{ odh_project }}'    
+    - name: deploy open data hub instance
+      k8s:
+        kubeconfig: '{{ kubeconfig }}'
+        definition: '{{ lookup("template", "./files/opendatahub-instance.yml.j2")|from_yaml }}'
+      vars:
+        project_name: '{{ odh_project }}'   
+
+    - name: wait for open data hub operator to finish setting up
+      pause:
+        seconds: 30  
+
+    - name: deploy AI Library instance
+      k8s:
+        kubeconfig: '{{ kubeconfig }}'
+        definition: '{{ lookup("template", "./files/ai-library-instance.yml.j2")|from_yaml }}'
+      vars:
+        project_name: '{{ odh_project }}'     
     
       
     - name: subscribe to amq streams operator
@@ -146,26 +152,6 @@
       - name: wait for serverless operator subscriptions
         pause:
           seconds: 60       
-
-      # - name: subscribe to serverless - eventing operator
-      #   k8s: 
-      #     kubeconfig: '{{ kubeconfig}}'
-      #     definition: 
-      #       apiVersion: operators.coreos.com/v1alpha1
-      #       kind: Subscription
-      #       metadata:
-      #         name: knative-eventing-operator
-      #         namespace: openshift-operators
-      #       spec:
-      #         channel: alpha
-      #         installPlanApproval: Automatic
-      #         name: knative-eventing-operator
-      #         source: community-operators
-      #         sourceNamespace: openshift-marketplace
-      #         targetNamespace: knative-eventing
-      # - name: wait for eventing operator subscriptions
-      #   pause:
-      #     seconds: 45 
 
       - name: subscribe to  kafka-knative operator
         k8s: 
@@ -251,6 +237,16 @@
         definition: '{{ lookup("template", "./files/kafka-source.yml.j2")|from_yaml }}'  
       vars:
         project_name: '{{ dev_project }}'  
+
+    - name: wait for kafka source before kafka-eventing
+      pause:
+        seconds: 20 
+
+
+    - name: Add kafka eventing instance to knative-eventing project
+      k8s: 
+        kubeconfig: '{{ kubeconfig }}'
+        definition: '{{ lookup("template", "./files/kafka-eventing.yml.j2")|from_yaml }}'  
       
 
 

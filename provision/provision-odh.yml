@@ -1,0 +1,102 @@
+---
+- hosts: localhost
+  vars_files:
+    - ./vars/chatbot.yml
+  name : test out k8s setup
+  vars:    
+    # Note - this value is included in the chatbot and processor configuration, 
+    # so it's not easily changeable - used to locate the kafka bootstrap
+    amq_project: amq-streams1
+        
+
+  tasks:
+    
+
+    - name: Generate projects per-user
+      k8s:
+        kubeconfig: '{{ kubeconfig }}'
+        definition: '{{ lookup("template", "./files/project.yml.j2")|from_yaml }}'
+      with_items: 
+        - { name: '{{ odh_project }}', user: '{{dev_user}}'}
+
+    # - name: add seldon CRD
+    #   k8s:
+    #     kubeconfig: '{{ kubeconfig }}'    
+    #     definition: '{{ lookup("template", "./files/seldon-deployment-crd.yml")|from_yaml }}'
+      
+    - name: install open data hub operator
+      k8s:
+        kubeconfig: '{{ kubeconfig }}'
+        definition: '{{ lookup("template", "./files/opendatahub-operator.yml.j2")|from_yaml }}'
+      vars:
+        project_name: '{{ odh_project }}'
+
+    # there probably is a better way to do this    
+    # - name: wait for open data hub operator to finish setting up
+    #   pause:
+    #     seconds: 20  
+
+    - name: deploy open data hub instance
+      k8s:
+        kubeconfig: '{{ kubeconfig }}'
+        definition: '{{ lookup("template", "./files/opendatahub-instance.yml.j2")|from_yaml }}'
+      vars:
+        project_name: '{{ odh_project }}'    
+
+    - name: deploy AI Library instance
+      k8s:
+        kubeconfig: '{{ kubeconfig }}'
+        definition: '{{ lookup("template", "./files/ai-library-instance.yml.j2")|from_yaml }}'
+      vars:
+        project_name: '{{ odh_project }}'    
+    
+      
+    
+
+
+    # - name: create serverless operator subscriptions
+    #   block:
+    #   - name: subscribe to serverless - serving operators
+    #     k8s: 
+    #       kubeconfig: '{{ kubeconfig }}'
+    #       definition: 
+    #         apiVersion: operators.coreos.com/v1alpha1
+    #         kind: Subscription
+    #         metadata:
+    #           name: serverless-operator
+    #           namespace: openshift-operators
+    #         spec:
+    #           channel: "4.4"
+    #           installPlanApproval: Automatic
+    #           name: serverless-operator
+    #           source: redhat-operators
+    #           sourceNamespace: openshift-marketplace
+        
+    #   - name: wait for serverless operator subscriptions
+    #     pause:
+    #       seconds: 60       
+
+      # - name: subscribe to serverless - eventing operator
+      #   k8s: 
+      #     kubeconfig: '{{ kubeconfig}}'
+      #     definition: 
+      #       apiVersion: operators.coreos.com/v1alpha1
+      #       kind: Subscription
+      #       metadata:
+      #         name: knative-eventing-operator
+      #         namespace: openshift-operators
+      #       spec:
+      #         channel: alpha
+      #         installPlanApproval: Automatic
+      #         name: knative-eventing-operator
+      #         source: community-operators
+      #         sourceNamespace: openshift-marketplace
+      #         targetNamespace: knative-eventing
+      # - name: wait for eventing operator subscriptions
+      #   pause:
+      #     seconds: 45 
+
+     
+      
+
+
