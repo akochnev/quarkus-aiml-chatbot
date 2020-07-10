@@ -22,7 +22,6 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static quarkus.hackfest.sentiment.SentimentChatMessageProcessor.log;
 
 @Path("/")
 public class SentimentResource {
@@ -86,7 +85,7 @@ public class SentimentResource {
 
             producer.send(new ProducerRecord<>(sentimentsTopic, respStr));
 
-            log.info("Returning processed sentiment score {} ", respStr);
+            logger.info("Returning processed sentiment score {} ", respStr);
         } catch (JsonProcessingException ex) {
             logger.error("Failed to serialize json string", ex);
         }
